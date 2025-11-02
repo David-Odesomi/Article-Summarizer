@@ -19,7 +19,7 @@ document.getElementById("summarizeBtn").addEventListener("click", async () => {
   if (!isPro) {
     const canUse = await canSummarize();
     if (!canUse) {
-      summaryBox.textContent = "⚠️ Daily limit reached. Upgrade to Pro for unlimited summaries.";
+      summaryBox.textContent = "Daily limit reached. Upgrade to Pro for unlimited summaries.";
       copyBtn.classList.remove("show");
       return;
     }
@@ -49,7 +49,7 @@ document.getElementById("summarizeBtn").addEventListener("click", async () => {
     summaryBox.textContent = summary;
     
     // Increment usage count after successful summarization
-    if (!summary.startsWith("❌") && !summary.startsWith("⚠️")) {
+    if (!summary.startsWith("Error") && !summary.startsWith("Network error") && !summary.startsWith("No summary")) {
       await incrementUsage();
       await updateUsageDisplay();
       copyBtn.classList.add("show");
@@ -115,20 +115,20 @@ async function summarizeText(text) {
     // Handle errors directly from the API
     if (data.error) {
       const msg = data.error.message || "Unknown API error.";
-      return `❌ Gemini API Error: ${msg}`;
+      return `Gemini API Error: ${msg}`;
     }
 
     // Extract the summary text from Gemini’s structured response
     const summary = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!summary) {
-      return "⚠️ No summary returned by Gemini. Try again or check your API key.";
+      return "No summary returned by Gemini. Try again or check your API key.";
     }
 
     return summary;
 
   } catch (networkErr) {
     console.error("Network or fetch error:", networkErr);
-    return "⚠️ Network error — please check your internet connection or API key.";
+    return "Network error — please check your internet connection or API key.";
   }
 }
 
@@ -172,7 +172,7 @@ async function updateUsageDisplay() {
   const isPro = await isProUser();
   
   if (isPro) {
-    usageCounter.textContent = "✨ Pro: Unlimited summaries";
+    usageCounter.textContent = "Pro: Unlimited summaries";
     usageCounter.className = "usage-counter pro";
     return;
   }

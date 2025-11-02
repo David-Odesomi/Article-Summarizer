@@ -89,6 +89,10 @@ curl -X POST http://localhost:3000/verify \
 
 ### Deploy to Vercel
 
+📖 **See [VERCEL_SETUP.md](./VERCEL_SETUP.md) for complete deployment instructions**
+
+#### Quick Start:
+
 1. Install Vercel CLI:
 ```bash
 npm install -g vercel
@@ -100,9 +104,18 @@ cd api
 vercel
 ```
 
-3. Follow the prompts and your API will be deployed!
+3. **Add Environment Variables in Vercel Dashboard:**
+   - `PADDLE_VENDOR_ID` - Your numeric Paddle vendor ID
+   - `PADDLE_AUTH_CODE` - `pdl_live_apikey_01k928qp91arpw6dg2pykg0xtw_F9nvhDj0yGbdZ02QEXvhGG_Aeu`
+   - `PADDLE_PRODUCT_ID` - Your Paddle product ID
+   - `VALID_KEYS` - Comma-separated license keys (optional)
 
-4. Update your extension code with the Vercel URL:
+4. Redeploy after adding environment variables:
+```bash
+vercel --prod
+```
+
+5. Update your extension code with the Vercel URL:
 ```javascript
 const BACKEND_URL = "https://your-project.vercel.app/verify";
 ```

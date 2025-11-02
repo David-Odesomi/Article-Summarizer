@@ -196,76 +196,44 @@
         margin-bottom: 24px;
       }
 
-      #goProBtn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: #ffffff;
-        border: none;
-        margin-bottom: 12px;
+      .payment-info {
+        padding: 14px 16px;
+        background: rgba(46, 170, 220, 0.08);
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .payment-info strong {
+        color: #2eaadc;
         font-weight: 600;
       }
 
-      #goProBtn:hover {
-        background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      .payment-info p {
+        margin: 6px 0;
       }
 
-      #goProBtn::before {
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      }
-
-      /* Success Banner */
-      .success-banner {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: #ffffff;
-        padding: 14px 20px;
-        text-align: center;
-        font-size: 13px;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        z-index: 1000;
-        display: none;
-        animation: slideDown 0.4s ease-out;
-      }
-
-      .success-banner.show {
-        display: block;
-      }
-
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-100%);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .container.with-banner {
-        margin-top: 50px;
+      .payment-note {
+        font-size: 12px;
+        color: rgba(55, 53, 47, 0.6);
+        margin-top: 8px;
+        font-style: italic;
       }
     </style>
-    <!-- Paddle.js Script -->
-    <script src="https://cdn.paddle.com/paddle/paddle.js"></script>
   </head>
   <body>
-    <!-- Success Banner -->
-    <div class="success-banner" id="successBanner">
-      ✅ Payment successful! Check your email for your Pro license key.
-    </div>
-
     <div class="container">
       <h3>Pro License</h3>
-      <p class="subtitle">Enter your license key to unlock unlimited summaries</p>
+      <p class="subtitle">Upgrade to Pro for unlimited summaries</p>
 
-      <!-- Upgrade to Pro Section -->
-      <div class="pro-section">
-        <button id="goProBtn">💎 Upgrade to Pro</button>
+      <!-- Payment Information -->
+      <div class="payment-info">
+        <p><strong>Payment Details:</strong></p>
+        <p>Bank: Opay</p>
+        <p>Account Number: 9050501700</p>
+        <p>Account Name: Odesomi David</p>
+        <p class="payment-note">After payment, you will receive your license key via email</p>
       </div>
 
       <div class="divider"></div>

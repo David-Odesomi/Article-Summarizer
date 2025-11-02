@@ -1,21 +1,15 @@
 // Backend URL for license verification
 const BACKEND_URL = "https://article-summarizer-tan-two.vercel.app/verify";
 
-// Paddle Configuration
-const PADDLE_PRODUCT_ID = 'YOUR_PRODUCT_ID_HERE'; // Replace with your actual Paddle Product ID
-
-// Initialize Paddle
-if (typeof Paddle !== 'undefined') {
-  Paddle.Environment.set("production");
-  Paddle.Setup({ token: "live_71f116890e42a1b5fc20654efde" });
-}
+// Payment page URL - Replace with your actual payment/checkout page
+const PAYMENT_PAGE_URL = "https://your-payment-page.com";
 
 // Load existing license key on page load
 document.addEventListener('DOMContentLoaded', async () => {
   await loadCurrentKey();
   
-  // Initialize Paddle checkout button
-  initializePaddleCheckout();
+  // Initialize upgrade button
+  initializeUpgradeButton();
 });
 
 // Save button handler
@@ -66,6 +60,9 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
 
 // Verify license key with backend
 async function verifyLicenseKey(key) {
+  console.log('[VERIFY] Starting license verification...');
+  console.log('[VERIFY] Backend URL:', BACKEND_URL);
+  
   try {
     const response = await fetch(BACKEND_URL, {
       method: 'POST',
@@ -75,17 +72,29 @@ async function verifyLicenseKey(key) {
       body: JSON.stringify({ licenseKey: key })
     });
 
+    console.log('[VERIFY] Response status:', response.status);
+
     if (!response.ok) {
+      console.error('[VERIFY] HTTP error:', response.status, response.statusText);
       return false;
     }
 
     const data = await response.json();
+    console.log('[VERIFY] Response data:', JSON.stringify(data, null, 2));
     
     // Check if the response indicates a valid license
-    return data.valid === true || data.success === true;
+    const isValid = data.valid === true || data.success === true;
+    
+    if (isValid) {
+      console.log('[VERIFY] License key is VALID');
+    } else {
+      console.log('[VERIFY] License key is INVALID:', data.message || data.error);
+    }
+    
+    return isValid;
     
   } catch (error) {
-    console.error('Network error during verification:', error);
+    console.error('[VERIFY] Network error during verification:', error);
     throw error;
   }
 }
@@ -97,7 +106,7 @@ async function loadCurrentKey() {
 
   if (data.isPro && data.licenseKey) {
     const maskedKey = maskLicenseKey(data.licenseKey);
-    currentKeyDiv.innerHTML = `<strong>Current License:</strong> ${maskedKey} ✓`;
+    currentKeyDiv.innerHTML = `<strong>Current License:</strong> ${maskedKey} (Active)`;
     currentKeyDiv.style.display = 'block';
   } else {
     currentKeyDiv.style.display = 'none';
@@ -149,58 +158,17 @@ async function isProUser() {
   }
 }
 
-// Initialize Paddle checkout
-function initializePaddleCheckout() {
+// Initialize upgrade button
+function initializeUpgradeButton() {
   const goProBtn = document.getElementById('goProBtn');
   
   if (!goProBtn) return;
   
   goProBtn.addEventListener('click', () => {
-    if (typeof Paddle === 'undefined') {
-      showStatus('Payment system not loaded. Please refresh the page.', 'error');
-      return;
-    }
+    console.log('[UPGRADE] Opening payment page...');
     
-    // Open Paddle checkout
-    Paddle.Checkout.open({
-      product: PADDLE_PRODUCT_ID,
-      successCallback: function(data) {
-        // Payment successful
-        console.log('Purchase successful:', data);
-        
-        // Show success banner
-        showSuccessBanner();
-        
-        // Also show status message below
-        showStatus('Payment successful! Check your email for the license key.', 'success');
-      },
-      closeCallback: function(data) {
-        // Checkout closed
-        console.log('Checkout closed:', data);
-        
-        // Only show message if checkout was closed without completing
-        if (!data || !data.checkout || !data.checkout.completed) {
-          showStatus('Checkout cancelled', 'info');
-        }
-      }
-    });
+    // Open payment page in new tab
+    chrome.tabs.create({ url: PAYMENT_PAGE_URL });
   });
-}
-
-// Show success banner at the top
-function showSuccessBanner() {
-  const banner = document.getElementById('successBanner');
-  const container = document.querySelector('.container');
-  
-  if (banner) {
-    banner.classList.add('show');
-    container.classList.add('with-banner');
-    
-    // Auto-hide banner after 10 seconds
-    setTimeout(() => {
-      banner.classList.remove('show');
-      container.classList.remove('with-banner');
-    }, 10000);
-  }
 }
 
