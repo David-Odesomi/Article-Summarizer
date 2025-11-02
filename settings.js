@@ -1,5 +1,5 @@
 // Backend URL for license verification
-const BACKEND_URL = "https://your-backend-url.com/verify";
+const BACKEND_URL = "https://article-summarizer-tan-two.vercel.app/verify";
 
 // Load existing license key on page load
 document.addEventListener('DOMContentLoaded', async () => {

@@ -1,6 +1,6 @@
 // Daily usage limit
 const DAILY_LIMIT = 5;
-const BACKEND_URL = "https://your-backend-url.com/verify";
+const BACKEND_URL = "https://article-summarizer-tan-two.vercel.app/verify";
 
 // Update usage counter on page load
 document.addEventListener('DOMContentLoaded', async () => {
