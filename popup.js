@@ -1,5 +1,6 @@
 // Daily usage limit
 const DAILY_LIMIT = 5;
+const BACKEND_URL = "https://your-backend-url.com/verify";
 
 // Update usage counter on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,12 +12,17 @@ document.getElementById("summarizeBtn").addEventListener("click", async () => {
   const summaryBox = document.getElementById("summary");
   const copyBtn = document.getElementById("copyBtn");
   
+  // Check if user is Pro (skip limits)
+  const isPro = await isProUser();
+  
   // Check if user can summarize (within daily limit)
-  const canUse = await canSummarize();
-  if (!canUse) {
-    summaryBox.textContent = "⚠️ Daily limit reached. Upgrade to Pro for unlimited summaries.";
-    copyBtn.classList.remove("show");
-    return;
+  if (!isPro) {
+    const canUse = await canSummarize();
+    if (!canUse) {
+      summaryBox.textContent = "⚠️ Daily limit reached. Upgrade to Pro for unlimited summaries.";
+      copyBtn.classList.remove("show");
+      return;
+    }
   }
   
   summaryBox.textContent = "Summarizing... please wait.";
@@ -160,9 +166,20 @@ async function incrementUsage() {
 
 // Helper: Update usage display
 async function updateUsageDisplay() {
+  const usageCounter = document.getElementById("usageCounter");
+  
+  // Check if user is Pro
+  const isPro = await isProUser();
+  
+  if (isPro) {
+    usageCounter.textContent = "✨ Pro: Unlimited summaries";
+    usageCounter.className = "usage-counter pro";
+    return;
+  }
+  
+  // Show regular usage for free users
   const data = await chrome.storage.local.get(["usageCount", "lastUsed"]);
   const today = new Date().toDateString();
-  const usageCounter = document.getElementById("usageCounter");
   
   // Reset counter if its a new day
   let currentUsage = 0;
@@ -175,12 +192,50 @@ async function updateUsageDisplay() {
   // Update the display
   if (remaining <= 0) {
     usageCounter.textContent = "No summaries left today. Resets tomorrow.";
-    usageCounter.classList.add("warning");
+    usageCounter.className = "usage-counter warning";
   } else if (remaining === 1) {
     usageCounter.textContent = `${remaining} summary remaining today`;
-    usageCounter.classList.add("warning");
+    usageCounter.className = "usage-counter warning";
   } else {
     usageCounter.textContent = `${remaining} summaries remaining today`;
-    usageCounter.classList.remove("warning");
+    usageCounter.className = "usage-counter";
+  }
+}
+
+
+// Check if user has Pro license
+async function isProUser() {
+  const data = await chrome.storage.local.get(["licenseKey", "isPro"]);
+  
+  // If no license key, return false
+  if (!data.licenseKey || !data.isPro) {
+    return false;
+  }
+
+  // Verify the license key is still valid
+  try {
+    const response = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ licenseKey: data.licenseKey })
+    });
+
+    if (!response.ok) {
+      await chrome.storage.local.set({ isPro: false });
+      return false;
+    }
+
+    const result = await response.json();
+    const isValid = result.valid === true || result.success === true;
+    
+    if (!isValid) {
+      await chrome.storage.local.set({ isPro: false });
+    }
+    
+    return isValid;
+  } catch (error) {
+    // On network error, trust the local storage (offline mode)
+    console.warn("Could not verify license online, using cached status");
+    return data.isPro === true;
   }
 }
