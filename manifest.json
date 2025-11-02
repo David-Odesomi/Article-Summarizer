@@ -3,7 +3,7 @@
     "name": "Article Summarizer",
     "version": "1.0",
     "description": "Summarize any article or webpage with a single click.",
-    "permissions": ["activeTab", "scripting", "storage"],
+    "permissions": ["activeTab", "scripting"],
     "action": {
       "default_popup": "popup.html"
     }
