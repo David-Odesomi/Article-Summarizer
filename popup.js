@@ -1,7 +1,26 @@
+// Daily usage limit
+const DAILY_LIMIT = 5;
+
+// Update usage counter on page load
+document.addEventListener('DOMContentLoaded', async () => {
+  await updateUsageDisplay();
+});
+
 // When the user clicks the "Summarize Page" button
 document.getElementById("summarizeBtn").addEventListener("click", async () => {
   const summaryBox = document.getElementById("summary");
+  const copyBtn = document.getElementById("copyBtn");
+  
+  // Check if user can summarize (within daily limit)
+  const canUse = await canSummarize();
+  if (!canUse) {
+    summaryBox.textContent = "⚠️ Daily limit reached. Upgrade to Pro for unlimited summaries.";
+    copyBtn.classList.remove("show");
+    return;
+  }
+  
   summaryBox.textContent = "Summarizing... please wait.";
+  copyBtn.classList.remove("show");
 
   try {
     // Get the active tab
@@ -22,10 +41,39 @@ document.getElementById("summarizeBtn").addEventListener("click", async () => {
 
     const summary = await summarizeText(text);
     summaryBox.textContent = summary;
+    
+    // Increment usage count after successful summarization
+    if (!summary.startsWith("❌") && !summary.startsWith("⚠️")) {
+      await incrementUsage();
+      await updateUsageDisplay();
+      copyBtn.classList.add("show");
+    }
 
   } catch (err) {
     console.error("Error:", err);
     summaryBox.textContent = "An unexpected error occurred. Check the console for details.";
+  }
+});
+
+// Copy button functionality
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const summaryBox = document.getElementById("summary");
+  const copyBtn = document.getElementById("copyBtn");
+  
+  try {
+    await navigator.clipboard.writeText(summaryBox.textContent);
+    const originalText = copyBtn.textContent;
+    copyBtn.textContent = "Copied!";
+    
+    setTimeout(() => {
+      copyBtn.textContent = originalText;
+    }, 2000);
+  } catch (err) {
+    console.error("Copy failed:", err);
+    copyBtn.textContent = "Copy failed";
+    setTimeout(() => {
+      copyBtn.textContent = "Copy Summary";
+    }, 2000);
   }
 });
 
@@ -75,5 +123,64 @@ async function summarizeText(text) {
   } catch (networkErr) {
     console.error("Network or fetch error:", networkErr);
     return "⚠️ Network error — please check your internet connection or API key.";
+  }
+}
+
+// Helper: Check if user can summarize (within daily limit)
+async function canSummarize() {
+  const data = await chrome.storage.local.get(['usageCount', 'lastUsed']);
+  const today = new Date().toDateString();
+  
+  // If no data or it's a new day, reset the counter
+  if (!data.lastUsed || data.lastUsed !== today) {
+    await chrome.storage.local.set({ usageCount: 0, lastUsed: today });
+    return true;
+  }
+  
+  // Check if user is within the daily limit
+  return data.usageCount < DAILY_LIMIT;
+}
+
+// Helper: Increment usage count
+async function incrementUsage() {
+  const data = await chrome.storage.local.get(['usageCount', 'lastUsed']);
+  const today = new Date().toDateString();
+  
+  // If it's a new day, reset to 1
+  if (!data.lastUsed || data.lastUsed !== today) {
+    await chrome.storage.local.set({ usageCount: 1, lastUsed: today });
+  } else {
+    // Increment the counter
+    await chrome.storage.local.set({ 
+      usageCount: (data.usageCount || 0) + 1, 
+      lastUsed: today 
+    });
+  }
+}
+
+// Helper: Update usage display
+async function updateUsageDisplay() {
+  const data = await chrome.storage.local.get(["usageCount", "lastUsed"]);
+  const today = new Date().toDateString();
+  const usageCounter = document.getElementById("usageCounter");
+  
+  // Reset counter if its a new day
+  let currentUsage = 0;
+  if (data.lastUsed === today) {
+    currentUsage = data.usageCount || 0;
+  }
+  
+  const remaining = DAILY_LIMIT - currentUsage;
+  
+  // Update the display
+  if (remaining <= 0) {
+    usageCounter.textContent = "No summaries left today. Resets tomorrow.";
+    usageCounter.classList.add("warning");
+  } else if (remaining === 1) {
+    usageCounter.textContent = `${remaining} summary remaining today`;
+    usageCounter.classList.add("warning");
+  } else {
+    usageCounter.textContent = `${remaining} summaries remaining today`;
+    usageCounter.classList.remove("warning");
   }
 }
