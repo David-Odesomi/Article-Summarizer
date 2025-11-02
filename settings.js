@@ -1,9 +1,21 @@
 // Backend URL for license verification
 const BACKEND_URL = "https://article-summarizer-tan-two.vercel.app/verify";
 
+// Paddle Configuration
+const PADDLE_PRODUCT_ID = 'YOUR_PRODUCT_ID_HERE'; // Replace with your actual Paddle Product ID
+
+// Initialize Paddle
+if (typeof Paddle !== 'undefined') {
+  Paddle.Environment.set("production");
+  Paddle.Setup({ token: "live_71f116890e42a1b5fc20654efde" });
+}
+
 // Load existing license key on page load
 document.addEventListener('DOMContentLoaded', async () => {
   await loadCurrentKey();
+  
+  // Initialize Paddle checkout button
+  initializePaddleCheckout();
 });
 
 // Save button handler
@@ -136,3 +148,59 @@ async function isProUser() {
     return data.isPro === true;
   }
 }
+
+// Initialize Paddle checkout
+function initializePaddleCheckout() {
+  const goProBtn = document.getElementById('goProBtn');
+  
+  if (!goProBtn) return;
+  
+  goProBtn.addEventListener('click', () => {
+    if (typeof Paddle === 'undefined') {
+      showStatus('Payment system not loaded. Please refresh the page.', 'error');
+      return;
+    }
+    
+    // Open Paddle checkout
+    Paddle.Checkout.open({
+      product: PADDLE_PRODUCT_ID,
+      successCallback: function(data) {
+        // Payment successful
+        console.log('Purchase successful:', data);
+        
+        // Show success banner
+        showSuccessBanner();
+        
+        // Also show status message below
+        showStatus('Payment successful! Check your email for the license key.', 'success');
+      },
+      closeCallback: function(data) {
+        // Checkout closed
+        console.log('Checkout closed:', data);
+        
+        // Only show message if checkout was closed without completing
+        if (!data || !data.checkout || !data.checkout.completed) {
+          showStatus('Checkout cancelled', 'info');
+        }
+      }
+    });
+  });
+}
+
+// Show success banner at the top
+function showSuccessBanner() {
+  const banner = document.getElementById('successBanner');
+  const container = document.querySelector('.container');
+  
+  if (banner) {
+    banner.classList.add('show');
+    container.classList.add('with-banner');
+    
+    // Auto-hide banner after 10 seconds
+    setTimeout(() => {
+      banner.classList.remove('show');
+      container.classList.remove('with-banner');
+    }, 10000);
+  }
+}
+

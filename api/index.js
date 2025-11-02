@@ -4,24 +4,31 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Paddle Configuration from Environment Variables
+const PADDLE_VENDOR_ID = process.env.PADDLE_VENDOR_ID;
+const PADDLE_AUTH_CODE = process.env.PADDLE_AUTH_CODE || process.env.PADDLE_API_KEY;
+const PADDLE_PRODUCT_ID = process.env.PADDLE_PRODUCT_ID;
+
+// Valid license keys from environment or hardcoded fallback
+const VALID_KEYS = process.env.VALID_KEYS 
+  ? process.env.VALID_KEYS.split(',').map(key => key.trim())
+  : [
+      'PRO-2024-XXXX-XXXX-XXXX',
+      'PRO-2024-YYYY-YYYY-YYYY',
+      'PRO-2024-ZZZZ-ZZZZ-ZZZZ',
+    ];
+
 // Middleware
 app.use(cors()); // Enable CORS for Chrome extension
 app.use(express.json());
-
-// Valid license keys (in production, use a database or environment variables)
-const VALID_KEYS = [
-  'PRO-2024-XXXX-XXXX-XXXX',
-  'PRO-2024-YYYY-YYYY-YYYY',
-  'PRO-2024-ZZZZ-ZZZZ-ZZZZ',
-  // Add more keys as needed
-];
 
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     message: 'Article Summarizer License API',
-    version: '1.0.0'
+    version: '1.0.0',
+    paddle_configured: !!(PADDLE_VENDOR_ID && PADDLE_AUTH_CODE && PADDLE_PRODUCT_ID)
   });
 });
 
